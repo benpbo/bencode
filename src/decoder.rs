@@ -1,6 +1,7 @@
 use crate::bencode::Bencode;
 use std::io::Read;
 
+#[derive(Debug, PartialEq, Eq)]
 pub enum DecoderError {
     EOF,
     IO,
