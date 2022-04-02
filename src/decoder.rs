@@ -26,8 +26,7 @@ impl<R: Read> Decoder<R> {
     }
 
     pub fn decode(&mut self) -> DecoderResult<Bencode> {
-        let current = self.advance()?;
-        match current {
+        match self.advance()? {
             b'i' => self.decode_integer(),
             d @ b'0'..=b'9' => self.decode_string(),
             b'l' => self.decode_list(),
