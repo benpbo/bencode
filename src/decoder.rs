@@ -1,5 +1,5 @@
 use crate::bencode::Bencode;
-use std::io::Read;
+use std::io::{ErrorKind, Read};
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum DecoderError {
@@ -8,6 +8,15 @@ pub enum DecoderError {
     NAN,
     EmptyNumber,
     IntegerOverflow,
+}
+
+impl From<std::io::Error> for DecoderError {
+    fn from(error: std::io::Error) -> Self {
+        match error.kind() {
+            ErrorKind::UnexpectedEof => DecoderError::EOF,
+            _ => DecoderError::IO,
+        }
+    }
 }
 
 pub type DecoderResult<T> = Result<T, DecoderError>;
