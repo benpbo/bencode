@@ -55,11 +55,11 @@ impl<R: Read> Decoder<R> {
         let sign = self.decode_integer_sign()?;
         let number = self.decode_number(sign)?;
 
-        if self.current() == b'e' {
-            Ok(Bencode::Integer(number))
-        } else {
-            Err(DecoderError::NAN)
+        if self.current() != b'e' {
+            return Err(DecoderError::NAN);
         }
+
+        Ok(Bencode::Integer(number))
     }
 
     fn decode_string(&self) -> DecoderResult<Bencode> {
