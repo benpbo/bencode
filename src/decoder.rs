@@ -23,15 +23,12 @@ pub type DecoderResult<T> = Result<T, DecoderError>;
 
 pub struct Decoder<R: Read> {
     reader: R,
-    buffer: [u8; 1],
+    current: u8,
 }
 
 impl<R: Read> Decoder<R> {
     pub fn new(reader: R) -> Self {
-        Self {
-            reader,
-            buffer: [0u8],
-        }
+        Self { reader, current: 0 }
     }
 
     pub fn decode(&mut self) -> DecoderResult<Bencode> {
@@ -45,7 +42,7 @@ impl<R: Read> Decoder<R> {
     }
 
     fn decode_integer(&mut self) -> DecoderResult<Bencode> {
-        debug_assert_eq!(self.current(), b'i');
+        debug_assert_eq!(self.current, b'i');
 
         // Empty integer: "ie"
         if self.advance()? == b'e' {
@@ -60,7 +57,7 @@ impl<R: Read> Decoder<R> {
     }
 
     fn decode_string(&mut self) -> DecoderResult<Bencode> {
-        debug_assert!(self.current().is_ascii_digit());
+        debug_assert!(self.current.is_ascii_digit());
 
         let length = self.decode_number(1)? as usize;
         self.expect(b':', DecoderError::NAN)?;
@@ -78,7 +75,7 @@ impl<R: Read> Decoder<R> {
     }
 
     fn decode_integer_sign(&mut self) -> DecoderResult<i64> {
-        if self.current() == b'-' {
+        if self.current == b'-' {
             self.advance()?;
             return Ok(-1);
         }
@@ -103,7 +100,7 @@ impl<R: Read> Decoder<R> {
     }
 
     fn decode_digit(&self) -> Option<i64> {
-        (self.current() as char)
+        (self.current as char)
             .to_digit(10)
             .map(|digit| digit as i64)
     }
@@ -118,7 +115,7 @@ impl<R: Read> Decoder<R> {
     }
 
     fn expect(&self, expected: u8, error: DecoderError) -> DecoderResult<()> {
-        if self.current() != expected {
+        if self.current != expected {
             return Err(error);
         }
 
@@ -126,20 +123,15 @@ impl<R: Read> Decoder<R> {
     }
 
     fn advance(&mut self) -> DecoderResult<u8> {
-        let amount_read = self
-            .reader
-            .read(&mut self.buffer)
-            .map_err(DecoderError::from)?;
+        let mut buffer = [0u8];
+        let amount_read = self.reader.read(&mut buffer).map_err(DecoderError::from)?;
 
         if amount_read == 0 {
             return Err(DecoderError::EOF);
         }
 
-        Ok(self.buffer[0])
-    }
-
-    fn current(&self) -> u8 {
-        self.buffer[0]
+        self.current = buffer[0];
+        Ok(self.current)
     }
 }
 
@@ -152,7 +144,7 @@ mod tests {
     fn create_decoder(encoded: &[u8]) -> Decoder<Cursor<&[u8]>> {
         Decoder {
             reader: Cursor::new(&encoded[1..]),
-            buffer: [encoded[0]],
+            current: encoded[0],
         }
     }
 
