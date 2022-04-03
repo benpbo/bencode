@@ -37,10 +37,10 @@ impl<R: Read> Decoder<R> {
     pub fn decode(&mut self) -> DecoderResult<Bencode> {
         match self.advance()? {
             b'i' => self.decode_integer(),
-            d @ b'0'..=b'9' => self.decode_string(),
+            b'0'..=b'9' => self.decode_string(),
             b'l' => self.decode_list(),
             b'd' => self.decode_dictionary(),
-            c => todo!(),
+            _c => todo!(),
         }
     }
 
