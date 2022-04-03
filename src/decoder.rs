@@ -44,7 +44,7 @@ impl<R: Read> Decoder<R> {
         }
     }
 
-    fn decode_integer(&mut self) -> Result<Bencode, DecoderError> {
+    fn decode_integer(&mut self) -> DecoderResult<Bencode> {
         debug_assert_eq!(self.current(), b'i');
 
         // Empty integer: "ie"
@@ -62,15 +62,15 @@ impl<R: Read> Decoder<R> {
         }
     }
 
-    fn decode_string(&self) -> Result<Bencode, DecoderError> {
+    fn decode_string(&self) -> DecoderResult<Bencode> {
         todo!()
     }
 
-    fn decode_list(&self) -> Result<Bencode, DecoderError> {
+    fn decode_list(&self) -> DecoderResult<Bencode> {
         todo!()
     }
 
-    fn decode_dictionary(&self) -> Result<Bencode, DecoderError> {
+    fn decode_dictionary(&self) -> DecoderResult<Bencode> {
         todo!()
     }
 
@@ -105,7 +105,7 @@ impl<R: Read> Decoder<R> {
             .map(|digit| digit as i64)
     }
 
-    fn advance(&mut self) -> Result<u8, DecoderError> {
+    fn advance(&mut self) -> DecoderResult<u8> {
         let amount_read = self
             .reader
             .read(&mut self.buffer)
