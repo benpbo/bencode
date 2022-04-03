@@ -54,21 +54,14 @@ impl<R: Read> Decoder<R> {
 
         let sign = self.decode_integer_sign()?;
         let number = self.decode_number(sign)?;
-
-        if self.current() != b'e' {
-            return Err(DecoderError::NAN);
-        }
+        self.expect(b'e', DecoderError::NAN)?;
 
         Ok(Bencode::Integer(number))
     }
 
     fn decode_string(&mut self) -> DecoderResult<Bencode> {
         let length = self.decode_number(1)? as usize;
-
-        if self.current() != b':' {
-            return Err(DecoderError::NAN);
-        }
-
+        self.expect(b':', DecoderError::NAN)?;
         let bytes = self.read_bytes(length)?;
 
         Ok(Bencode::String(bytes))
@@ -120,6 +113,14 @@ impl<R: Read> Decoder<R> {
             .map_err(DecoderError::from)?;
 
         Ok(bytes)
+    }
+
+    fn expect(&self, expected: u8, error: DecoderError) -> DecoderResult<()> {
+        if self.current() != expected {
+            return Err(error);
+        }
+
+        Ok(())
     }
 
     fn advance(&mut self) -> DecoderResult<u8> {
