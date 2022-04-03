@@ -62,8 +62,19 @@ impl<R: Read> Decoder<R> {
         Ok(Bencode::Integer(number))
     }
 
-    fn decode_string(&self) -> DecoderResult<Bencode> {
-        todo!()
+    fn decode_string(&mut self) -> DecoderResult<Bencode> {
+        let length = self.decode_number(1)? as usize;
+
+        if self.current() != b':' {
+            return Err(DecoderError::NAN);
+        }
+
+        let mut bytes = vec![0; length];
+        self.reader
+            .read_exact(&mut bytes)
+            .map_err(DecoderError::from)?;
+
+        Ok(Bencode::String(bytes))
     }
 
     fn decode_list(&self) -> DecoderResult<Bencode> {
@@ -206,5 +217,53 @@ mod tests {
 
         // Assert
         assert_eq!(result, Err(DecoderError::IntegerOverflow));
+    }
+
+    #[test]
+    fn test_decode_ascii_string() {
+        // Arrange
+        let mut decoder = create_decoder(b"4:spam");
+
+        // Act
+        let result = decoder.decode_string();
+
+        // Assert
+        assert_eq!(result, Ok(Bencode::String(vec![b's', b'p', b'a', b'm'])));
+    }
+
+    #[test]
+    fn test_decode_raw_byte_string() {
+        // Arrange
+        let mut decoder = create_decoder(b"4:\x00\x01\x02\x03");
+
+        // Act
+        let result = decoder.decode_string();
+
+        // Assert
+        assert_eq!(result, Ok(Bencode::String(vec![0x00, 0x01, 0x02, 0x03])));
+    }
+
+    #[test]
+    fn test_decode_too_long_ascii_string() {
+        // Arrange
+        let mut decoder = create_decoder(b"4:spam+");
+
+        // Act
+        let result = decoder.decode_string();
+
+        // Assert
+        assert_eq!(result, Ok(Bencode::String(vec![b's', b'p', b'a', b'm'])));
+    }
+
+    #[test]
+    fn test_decode_too_short_ascii_string() {
+        // Arrange
+        let mut decoder = create_decoder(b"4:spa");
+
+        // Act
+        let result = decoder.decode_string();
+
+        // Assert
+        assert_eq!(result, Err(DecoderError::EOF));
     }
 }
