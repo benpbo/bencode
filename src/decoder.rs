@@ -129,10 +129,10 @@ impl<R: Read> Decoder<R> {
             .map_err(DecoderError::from)?;
 
         if amount_read == 0 {
-            Err(DecoderError::EOF)
-        } else {
-            Ok(self.buffer[0])
+            return Err(DecoderError::EOF);
         }
+
+        Ok(self.buffer[0])
     }
 
     fn current(&self) -> u8 {
