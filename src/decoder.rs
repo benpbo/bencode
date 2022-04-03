@@ -113,8 +113,8 @@ impl<R: Read> Decoder<R> {
             .map(|digit| digit as i64)
     }
 
-    fn read_bytes(&mut self, length: usize) -> DecoderResult<Vec<u8>> {
-        let mut bytes = vec![0; length];
+    fn read_bytes(&mut self, amount: usize) -> DecoderResult<Vec<u8>> {
+        let mut bytes = vec![0; amount];
         self.reader
             .read_exact(&mut bytes)
             .map_err(DecoderError::from)?;
