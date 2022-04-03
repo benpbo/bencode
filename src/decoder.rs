@@ -60,6 +60,8 @@ impl<R: Read> Decoder<R> {
     }
 
     fn decode_string(&mut self) -> DecoderResult<Bencode> {
+        debug_assert!(self.current().is_ascii_digit());
+
         let length = self.decode_number(1)? as usize;
         self.expect(b':', DecoderError::NAN)?;
         let bytes = self.read_bytes(length)?;
