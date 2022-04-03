@@ -126,7 +126,7 @@ impl<R: Read> Decoder<R> {
         let amount_read = self
             .reader
             .read(&mut self.buffer)
-            .map_err(|_| DecoderError::IO)?;
+            .map_err(DecoderError::from)?;
 
         if amount_read == 0 {
             Err(DecoderError::EOF)
