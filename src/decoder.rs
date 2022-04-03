@@ -107,7 +107,7 @@ impl<R: Read> Decoder<R> {
         Ok(number)
     }
 
-    fn decode_digit(&mut self) -> Option<i64> {
+    fn decode_digit(&self) -> Option<i64> {
         (self.current() as char)
             .to_digit(10)
             .map(|digit| digit as i64)
@@ -135,7 +135,7 @@ impl<R: Read> Decoder<R> {
         }
     }
 
-    fn current(&mut self) -> u8 {
+    fn current(&self) -> u8 {
         self.buffer[0]
     }
 }
