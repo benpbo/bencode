@@ -69,10 +69,7 @@ impl<R: Read> Decoder<R> {
             return Err(DecoderError::NAN);
         }
 
-        let mut bytes = vec![0; length];
-        self.reader
-            .read_exact(&mut bytes)
-            .map_err(DecoderError::from)?;
+        let bytes = self.read_bytes(length)?;
 
         Ok(Bencode::String(bytes))
     }
@@ -114,6 +111,15 @@ impl<R: Read> Decoder<R> {
         (self.current() as char)
             .to_digit(10)
             .map(|digit| digit as i64)
+    }
+
+    fn read_bytes(&mut self, length: usize) -> DecoderResult<Vec<u8>> {
+        let mut bytes = vec![0; length];
+        self.reader
+            .read_exact(&mut bytes)
+            .map_err(DecoderError::from)?;
+
+        Ok(bytes)
     }
 
     fn advance(&mut self) -> DecoderResult<u8> {
