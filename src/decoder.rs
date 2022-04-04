@@ -142,10 +142,7 @@ mod tests {
     use std::io::Cursor;
 
     fn create_decoder(encoded: &[u8]) -> Decoder<Cursor<&[u8]>> {
-        Decoder {
-            reader: Cursor::new(&encoded[1..]),
-            current: encoded[0],
-        }
+        Decoder::new(Cursor::new(encoded))
     }
 
     #[test]
@@ -154,7 +151,7 @@ mod tests {
         let mut decoder = create_decoder(b"i123e");
 
         // Act
-        let result = decoder.decode_integer();
+        let result = decoder.decode();
 
         // Assert
         assert_eq!(result, Ok(Bencode::Integer(123)));
@@ -166,7 +163,7 @@ mod tests {
         let mut decoder = create_decoder(b"i-123e");
 
         // Act
-        let result = decoder.decode_integer();
+        let result = decoder.decode();
 
         // Assert
         assert_eq!(result, Ok(Bencode::Integer(-123)));
@@ -178,7 +175,7 @@ mod tests {
         let mut decoder = create_decoder(b"i0e");
 
         // Act
-        let result = decoder.decode_integer();
+        let result = decoder.decode();
 
         // Assert
         assert_eq!(result, Ok(Bencode::Integer(0)));
@@ -190,7 +187,7 @@ mod tests {
         let mut decoder = create_decoder(b"ie");
 
         // Act
-        let result = decoder.decode_integer();
+        let result = decoder.decode();
 
         // Assert
         assert_eq!(result, Err(DecoderError::EmptyNumber));
@@ -202,7 +199,7 @@ mod tests {
         let mut decoder = create_decoder(b"i123a123e");
 
         // Act
-        let result = decoder.decode_integer();
+        let result = decoder.decode();
 
         // Assert
         assert_eq!(result, Err(DecoderError::NAN));
@@ -214,7 +211,7 @@ mod tests {
         let mut decoder = create_decoder(b"i9223372036854775808e"); // i64::MAX + 1
 
         // Act
-        let result = decoder.decode_integer();
+        let result = decoder.decode();
 
         // Assert
         assert_eq!(result, Err(DecoderError::IntegerOverflow));
@@ -226,7 +223,7 @@ mod tests {
         let mut decoder = create_decoder(b"4:spam");
 
         // Act
-        let result = decoder.decode_string();
+        let result = decoder.decode();
 
         // Assert
         assert_eq!(result, Ok(Bencode::String(b"spam".to_vec())));
@@ -238,7 +235,7 @@ mod tests {
         let mut decoder = create_decoder(b"4:\x00\x01\x02\x03");
 
         // Act
-        let result = decoder.decode_string();
+        let result = decoder.decode();
 
         // Assert
         assert_eq!(result, Ok(Bencode::String(vec![0x00, 0x01, 0x02, 0x03])));
@@ -250,7 +247,7 @@ mod tests {
         let mut decoder = create_decoder(b"4:spam+");
 
         // Act
-        let result = decoder.decode_string();
+        let result = decoder.decode();
 
         // Assert
         assert_eq!(result, Ok(Bencode::String(b"spam".to_vec())));
@@ -262,7 +259,7 @@ mod tests {
         let mut decoder = create_decoder(b"4:spa");
 
         // Act
-        let result = decoder.decode_string();
+        let result = decoder.decode();
 
         // Assert
         assert_eq!(result, Err(DecoderError::EOF));
