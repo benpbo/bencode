@@ -147,8 +147,8 @@ impl<R: Read> Decoder<R> {
 
 #[cfg(test)]
 mod tests {
-    use super::Decoder;
-    use crate::{bencode::Bencode, decoder::DecoderError};
+    use super::{Decoder, DecoderError};
+    use crate::bencode::Bencode;
     use std::io::Cursor;
 
     fn create_decoder(encoded: &[u8]) -> Decoder<Cursor<&[u8]>> {
