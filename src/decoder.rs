@@ -71,8 +71,15 @@ impl<R: Read> Decoder<R> {
         Ok(Bencode::String(bytes))
     }
 
-    fn decode_list(&self) -> DecoderResult<Bencode> {
-        todo!()
+    fn decode_list(&mut self) -> DecoderResult<Bencode> {
+        debug_assert_eq!(self.current, b'l');
+
+        let mut items = vec![];
+        while self.advance()? != b'e' {
+            items.push(self.decode_current()?);
+        }
+
+        Ok(Bencode::List(items))
     }
 
     fn decode_dictionary(&self) -> DecoderResult<Bencode> {
@@ -268,5 +275,35 @@ mod tests {
 
         // Assert
         assert_eq!(result, Err(DecoderError::EOF));
+    }
+
+    #[test]
+    fn test_decode_list() {
+        // Arrange
+        let mut decoder = create_decoder(b"l4:spam4:eggse");
+
+        // Act
+        let result = decoder.decode();
+
+        // Assert
+        assert_eq!(
+            result,
+            Ok(Bencode::List(vec![
+                Bencode::String(b"spam".to_vec()),
+                Bencode::String(b"eggs".to_vec())
+            ]))
+        );
+    }
+
+    #[test]
+    fn test_decode_empty_list() {
+        // Arrange
+        let mut decoder = create_decoder(b"le");
+
+        // Act
+        let result = decoder.decode();
+
+        // Assert
+        assert_eq!(result, Ok(Bencode::List(vec![])));
     }
 }
