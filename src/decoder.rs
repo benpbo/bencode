@@ -55,7 +55,7 @@ impl<R: Read> Decoder<R> {
         }
 
         let sign = self.decode_integer_sign()?;
-        let number = self.decode_number(sign)?;
+        let number = sign * self.decode_number()?;
         self.expect(b'e', DecoderError::NAN)?;
 
         Ok(Bencode::Integer(number))
@@ -64,7 +64,7 @@ impl<R: Read> Decoder<R> {
     fn decode_string(&mut self) -> DecoderResult<Bencode> {
         debug_assert!(self.current.is_ascii_digit());
 
-        let length = self.decode_number(1)? as usize;
+        let length = self.decode_number()? as usize;
         self.expect(b':', DecoderError::NAN)?;
         let bytes = self.read_bytes(length)?;
 
@@ -95,14 +95,14 @@ impl<R: Read> Decoder<R> {
         Ok(1)
     }
 
-    fn decode_number(&mut self, sign: i64) -> DecoderResult<i64> {
+    fn decode_number(&mut self) -> DecoderResult<i64> {
         let mut number: i64 = 0;
         while let Some(digit) = self.decode_digit() {
             number = number
                 .checked_mul(10)
                 .ok_or(DecoderError::IntegerOverflow)?;
             number = number
-                .checked_add(digit * sign)
+                .checked_add(digit)
                 .ok_or(DecoderError::IntegerOverflow)?;
 
             self.advance()?;
