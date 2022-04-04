@@ -229,7 +229,7 @@ mod tests {
         let result = decoder.decode_string();
 
         // Assert
-        assert_eq!(result, Ok(Bencode::String(vec![b's', b'p', b'a', b'm'])));
+        assert_eq!(result, Ok(Bencode::String(b"spam".to_vec())));
     }
 
     #[test]
@@ -253,7 +253,7 @@ mod tests {
         let result = decoder.decode_string();
 
         // Assert
-        assert_eq!(result, Ok(Bencode::String(vec![b's', b'p', b'a', b'm'])));
+        assert_eq!(result, Ok(Bencode::String(b"spam".to_vec())));
     }
 
     #[test]
