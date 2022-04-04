@@ -100,9 +100,7 @@ impl<R: Read> Decoder<R> {
         while let Some(digit) = self.decode_digit() {
             number = number
                 .checked_mul(10)
-                .ok_or(DecoderError::IntegerOverflow)?;
-            number = number
-                .checked_add(digit)
+                .and_then(|number| number.checked_add(digit))
                 .ok_or(DecoderError::IntegerOverflow)?;
 
             self.advance()?;
