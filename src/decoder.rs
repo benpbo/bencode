@@ -1,5 +1,9 @@
 use crate::bencode::Bencode;
-use std::io::{ErrorKind, Read};
+use std::{
+    collections::BTreeMap,
+    io::{ErrorKind, Read},
+    string::FromUtf8Error,
+};
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum DecoderError {
@@ -8,6 +12,10 @@ pub enum DecoderError {
     NAN,
     EmptyNumber,
     IntegerOverflow,
+    DictionaryKeyIsNotString(Bencode),
+    DictionaryValueMissing,
+    DictionaryEmptyKey,
+    InvalidUtf8(FromUtf8Error),
 }
 
 impl From<std::io::Error> for DecoderError {
@@ -16,6 +24,12 @@ impl From<std::io::Error> for DecoderError {
             ErrorKind::UnexpectedEof => DecoderError::EOF,
             _ => DecoderError::IO,
         }
+    }
+}
+
+impl From<FromUtf8Error> for DecoderError {
+    fn from(error: FromUtf8Error) -> Self {
+        DecoderError::InvalidUtf8(error)
     }
 }
 
@@ -82,8 +96,22 @@ impl<R: Read> Decoder<R> {
         Ok(Bencode::List(items))
     }
 
-    fn decode_dictionary(&self) -> DecoderResult<Bencode> {
-        todo!()
+    fn decode_dictionary(&mut self) -> DecoderResult<Bencode> {
+        debug_assert_eq!(self.current, b'd');
+
+        let mut map = BTreeMap::new();
+        while self.advance()? != b'e' {
+            match self.decode_current()? {
+                Bencode::String(raw_key) => {
+                    let key = String::from_utf8(raw_key).map_err(DecoderError::from)?;
+                    let value: Bencode = self.decode()?;
+                    map.insert(key, value);
+                }
+                bencode => return Err(DecoderError::DictionaryKeyIsNotString(bencode)),
+            }
+        }
+
+        Ok(Bencode::Dictionary(map))
     }
 
     fn decode_integer_sign(&mut self) -> DecoderResult<i64> {
@@ -149,7 +177,7 @@ impl<R: Read> Decoder<R> {
 mod tests {
     use super::{Decoder, DecoderError};
     use crate::bencode::Bencode;
-    use std::io::Cursor;
+    use std::{collections::BTreeMap, io::Cursor};
 
     fn create_decoder(encoded: &[u8]) -> Decoder<Cursor<&[u8]>> {
         Decoder::new(Cursor::new(encoded))
@@ -303,5 +331,98 @@ mod tests {
 
         // Assert
         assert_eq!(result, Ok(Bencode::List(vec![])));
+    }
+
+    #[test]
+    fn test_decode_dictionary_with_strings() {
+        // Arrange
+        let mut decoder = create_decoder(b"d3:cow3:moo4:spam4:eggse");
+
+        // Act
+        let result = decoder.decode();
+
+        // Assert
+        assert_eq!(
+            result,
+            Ok(Bencode::Dictionary(BTreeMap::from([
+                ("cow".to_string(), Bencode::String(b"moo".to_vec())),
+                ("spam".to_string(), Bencode::String(b"eggs".to_vec())),
+            ])))
+        );
+    }
+
+    #[test]
+    fn test_decode_dictionary_with_list() {
+        // Arrange
+        let mut decoder = create_decoder(b"d4:spaml1:a1:bee");
+
+        // Act
+        let result = decoder.decode();
+
+        // Assert
+        assert_eq!(
+            result,
+            Ok(Bencode::Dictionary(BTreeMap::from([(
+                "spam".to_string(),
+                Bencode::List(vec![
+                    Bencode::String(b"a".to_vec()),
+                    Bencode::String(b"b".to_vec())
+                ]),
+            )])))
+        );
+    }
+
+    #[test]
+    fn test_decode_empty_dictionary() {
+        // Arrange
+        let mut decoder = create_decoder(b"de");
+
+        // Act
+        let result = decoder.decode();
+
+        // Assert
+        assert_eq!(result, Ok(Bencode::Dictionary(BTreeMap::new())));
+    }
+
+    #[test]
+    fn test_decode_dictionary_empty_key() {
+        // Arrange
+        let mut decoder = create_decoder(b"d0:4:spame");
+
+        // Act
+        let result = decoder.decode();
+
+        // Assert
+        assert_eq!(
+            result,
+            Ok(Bencode::Dictionary(BTreeMap::from([(
+                "".to_string(),
+                Bencode::String(b"spam".to_vec()),
+            )])))
+        );
+    }
+
+    #[test]
+    fn test_decode_dictionary_missing_value() {
+        // Arrange
+        let mut decoder = create_decoder(b"d3:cow3:moo4:spame");
+
+        // Act
+        let result = decoder.decode();
+
+        // Assert
+        assert_eq!(result, Err(DecoderError::DictionaryValueMissing));
+    }
+
+    #[test]
+    fn test_decode_dictionary_missing_end() {
+        // Arrange
+        let mut decoder = create_decoder(b"d3:cow3:moo4:spam");
+
+        // Act
+        let result = decoder.decode();
+
+        // Assert
+        assert_eq!(result, Err(DecoderError::EOF));
     }
 }
