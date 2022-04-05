@@ -448,7 +448,7 @@ mod tests {
         let result = decoder.decode();
 
         // Assert
-        assert_eq!(result, Err(DecoderError::DictionaryValueMissing));
+        assert_eq!(result, Err(DecoderError::UnexpectedByte(b'e')));
     }
 
     #[test]
