@@ -288,7 +288,7 @@ mod tests {
         let result = decoder.decode();
 
         // Assert
-        assert_eq!(result, Ok(Bencode::String(vec![0x00, 0x01, 0x02, 0x03])));
+        assert_eq!(result, Ok(Bencode::String(b"\x00\x01\x02\x03".to_vec())));
     }
 
     #[test]
