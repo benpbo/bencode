@@ -16,6 +16,7 @@ pub enum DecoderError {
     DictionaryValueMissing,
     DictionaryEmptyKey,
     InvalidUtf8(FromUtf8Error),
+    UnexpectedByte(u8),
 }
 
 impl From<std::io::Error> for DecoderError {
@@ -56,7 +57,7 @@ impl<R: Read> Decoder<R> {
             b'0'..=b'9' => self.decode_string(),
             b'l' => self.decode_list(),
             b'd' => self.decode_dictionary(),
-            _c => todo!(),
+            byte => Err(DecoderError::UnexpectedByte(byte)),
         }
     }
 
