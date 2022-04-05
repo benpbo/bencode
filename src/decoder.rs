@@ -292,6 +292,18 @@ mod tests {
     }
 
     #[test]
+    fn tets_decode_empty_string() {
+        // Arrange
+        let mut decoder = create_decoder(b"0:");
+
+        // Act
+        let result = decoder.decode();
+
+        // Assert
+        assert_eq!(result, Ok(Bencode::String(vec![])));
+    }
+
+    #[test]
     fn test_decode_too_long_ascii_string() {
         // Arrange
         let mut decoder = create_decoder(b"4:spam+");
