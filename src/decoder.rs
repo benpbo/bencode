@@ -13,8 +13,6 @@ pub enum DecoderError {
     EmptyNumber,
     IntegerOverflow,
     DictionaryKeyIsNotString(Bencode),
-    DictionaryValueMissing,
-    DictionaryEmptyKey,
     InvalidUtf8(FromUtf8Error),
     UnexpectedByte(u8),
 }
