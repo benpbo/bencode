@@ -256,6 +256,18 @@ mod tests {
     }
 
     #[test]
+    fn test_decode_integer_missing_end() {
+        // Arrange
+        let mut decoder = create_decoder(b"i123");
+
+        // Act
+        let result = decoder.decode();
+
+        // Assert
+        assert_eq!(result, Err(DecoderError::EOF));
+    }
+
+    #[test]
     fn test_decode_ascii_string() {
         // Arrange
         let mut decoder = create_decoder(b"4:spam");
@@ -331,6 +343,18 @@ mod tests {
 
         // Assert
         assert_eq!(result, Ok(Bencode::List(vec![])));
+    }
+
+    #[test]
+    fn test_decode_list_missing_end() {
+        // Arrange
+        let mut decoder = create_decoder(b"l4:spam");
+
+        // Act
+        let result = decoder.decode();
+
+        // Assert
+        assert_eq!(result, Err(DecoderError::EOF));
     }
 
     #[test]
