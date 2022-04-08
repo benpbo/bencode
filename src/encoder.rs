@@ -1,5 +1,5 @@
 use crate::bencode::Bencode;
-use std::io::Write;
+use std::{collections::BTreeMap, io::Write};
 
 pub type Result<T> = std::io::Result<T>;
 
@@ -17,7 +17,7 @@ impl<W: Write> Encoder<W> {
             Bencode::Integer(number) => self.encode_number(number),
             Bencode::String(bytes) => self.encode_string(&bytes),
             Bencode::List(list) => self.encode_list(&list),
-            Bencode::Dictionary(_dictionary) => todo!(),
+            Bencode::Dictionary(dictionary) => self.encode_dictionary(dictionary),
         }
     }
 
@@ -33,6 +33,15 @@ impl<W: Write> Encoder<W> {
         self.writer
             .write_all(b"l")
             .and(list.iter().try_for_each(|decoded| self.encode(decoded)))
+            .and(self.writer.write_all(b"e"))
+    }
+
+    fn encode_dictionary(&mut self, dictionary: &BTreeMap<String, Bencode>) -> Result<()> {
+        self.writer
+            .write_all(b"d")
+            .and(dictionary.into_iter().try_for_each(|(key, value)| {
+                self.encode_string(key.as_bytes()).and(self.encode(value))
+            }))
             .and(self.writer.write_all(b"e"))
     }
 }
