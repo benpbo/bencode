@@ -15,7 +15,7 @@ impl<W: Write> Encoder<W> {
     pub fn encode(&mut self, decoded: Bencode) -> Result<()> {
         match decoded {
             Bencode::Integer(number) => self.encode_number(number),
-            Bencode::String(_bytes) => todo!(),
+            Bencode::String(bytes) => self.encode_string(&bytes),
             Bencode::List(_list) => todo!(),
             Bencode::Dictionary(_dictionary) => todo!(),
         }
@@ -23,5 +23,9 @@ impl<W: Write> Encoder<W> {
 
     fn encode_number(&mut self, number: i64) -> Result<()> {
         write!(&mut self.writer, "i{}e", number)
+    }
+
+    fn encode_string(&mut self, bytes: &[u8]) -> Result<()> {
+        write!(&mut self.writer, "{}:", bytes.len()).and(self.writer.write_all(bytes))
     }
 }
