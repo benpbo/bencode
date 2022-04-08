@@ -45,3 +45,12 @@ impl<W: Write> Encoder<W> {
             .and(self.writer.write_all(b"e"))
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::Encoder;
+
+    fn create_encoder() -> Encoder<Vec<u8>> {
+        Encoder::new(vec![])
+    }
+}
