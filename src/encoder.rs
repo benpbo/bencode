@@ -15,8 +15,8 @@ impl<W: Write> Encoder<W> {
     pub fn encode(&mut self, decoded: &Bencode) -> Result<()> {
         match decoded {
             Bencode::Integer(number) => self.encode_number(number),
-            Bencode::String(bytes) => self.encode_string(&bytes),
-            Bencode::List(list) => self.encode_list(&list),
+            Bencode::String(bytes) => self.encode_string(bytes),
+            Bencode::List(list) => self.encode_list(list),
             Bencode::Dictionary(dictionary) => self.encode_dictionary(dictionary),
         }
     }
