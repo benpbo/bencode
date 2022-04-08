@@ -48,9 +48,50 @@ impl<W: Write> Encoder<W> {
 
 #[cfg(test)]
 mod tests {
+    use crate::bencode::Bencode;
+
     use super::Encoder;
 
     fn create_encoder() -> Encoder<Vec<u8>> {
         Encoder::new(vec![])
+    }
+
+    #[test]
+    fn test_encode_positive_integer() {
+        // Arrange
+        let mut encoder = create_encoder();
+
+        // Act
+        let result = encoder.encode(&Bencode::Integer(123));
+
+        // Assert
+        assert!(result.is_ok());
+        assert_eq!(encoder.writer, b"i123e");
+    }
+
+    #[test]
+    fn test_encode_negative_integer() {
+        // Arrange
+        let mut encoder = create_encoder();
+
+        // Act
+        let result = encoder.encode(&Bencode::Integer(-123));
+
+        // Assert
+        assert!(result.is_ok());
+        assert_eq!(encoder.writer, b"i-123e");
+    }
+
+    #[test]
+    fn test_encode_zero() {
+        // Arrange
+        let mut encoder = create_encoder();
+
+        // Act
+        let result = encoder.encode(&Bencode::Integer(0));
+
+        // Assert
+        assert!(result.is_ok());
+        assert_eq!(encoder.writer, b"i0e");
     }
 }
