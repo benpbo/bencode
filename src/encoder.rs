@@ -94,4 +94,43 @@ mod tests {
         assert!(result.is_ok());
         assert_eq!(encoder.writer, b"i0e");
     }
+
+    #[test]
+    fn test_encode_ascii_string() {
+        // Arrange
+        let mut encoder = create_encoder();
+
+        // Act
+        let result = encoder.encode(&Bencode::String(b"spam".to_vec()));
+
+        // Assert
+        assert!(result.is_ok());
+        assert_eq!(encoder.writer, b"4:spam");
+    }
+
+    #[test]
+    fn test_encode_raw_byte_string() {
+        // Arrange
+        let mut encoder = create_encoder();
+
+        // Act
+        let result = encoder.encode(&Bencode::String(b"\x00\x01\x02\x03".to_vec()));
+
+        // Assert
+        assert!(result.is_ok());
+        assert_eq!(encoder.writer, b"4:\x00\x01\x02\x03");
+    }
+
+    #[test]
+    fn test_encode_empty_string() {
+        // Arrange
+        let mut encoder = create_encoder();
+
+        // Act
+        let result = encoder.encode(&Bencode::String(vec![]));
+
+        // Assert
+        assert!(result.is_ok());
+        assert_eq!(encoder.writer, b"0:");
+    }
 }
