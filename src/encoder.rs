@@ -48,9 +48,9 @@ impl<W: Write> Encoder<W> {
 
 #[cfg(test)]
 mod tests {
-    use crate::bencode::Bencode;
-
     use super::Encoder;
+    use crate::bencode::Bencode;
+    use std::collections::BTreeMap;
 
     fn create_encoder() -> Encoder<Vec<u8>> {
         Encoder::new(vec![])
@@ -161,5 +161,69 @@ mod tests {
         // Assert
         assert!(result.is_ok());
         assert_eq!(encoder.writer, b"le");
+    }
+
+    #[test]
+    fn tets_encode_dictionary() {
+        // Arrange
+        let mut encoder = create_encoder();
+
+        // Act
+        let result = encoder.encode(&Bencode::Dictionary(BTreeMap::from([
+            ("cow".to_string(), Bencode::String(b"moo".to_vec())),
+            ("spam".to_string(), Bencode::String(b"eggs".to_vec())),
+        ])));
+
+        // Assert
+        assert!(result.is_ok());
+        assert_eq!(encoder.writer, b"d3:cow3:moo4:spam4:eggse");
+    }
+
+    #[test]
+    fn test_encode_dictionary_with_list() {
+        // Arrange
+        let mut encoder = create_encoder();
+
+        // Act
+        let result = encoder.encode(&Bencode::Dictionary(BTreeMap::from([(
+            "spam".to_string(),
+            Bencode::List(vec![
+                Bencode::String(b"a".to_vec()),
+                Bencode::String(b"b".to_vec()),
+            ]),
+        )])));
+
+        // Assert
+        assert!(result.is_ok());
+        assert_eq!(encoder.writer, b"d4:spaml1:a1:bee");
+    }
+
+    #[test]
+    fn test_decode_empty_dictionary() {
+        // Arrange
+        let mut encoder = create_encoder();
+
+        // Act
+        let result = encoder.encode(&Bencode::Dictionary(BTreeMap::new()));
+
+        // Assert
+        assert!(result.is_ok());
+        assert_eq!(encoder.writer, b"de");
+    }
+
+    #[test]
+    fn test_decode_dictionary_empty_key() {
+        // Arrange
+        let mut encoder = create_encoder();
+
+        // Act
+        let result = encoder.encode(&Bencode::Dictionary(BTreeMap::from([(
+            "".to_string(),
+            Bencode::String(b"spam".to_vec()),
+        )])));
+
+        // Assert
+        assert!(result.is_ok());
+        assert_eq!(encoder.writer, b"d0:4:spame");
     }
 }
