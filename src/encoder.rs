@@ -133,4 +133,33 @@ mod tests {
         assert!(result.is_ok());
         assert_eq!(encoder.writer, b"0:");
     }
+
+    #[test]
+    fn test_encode_list() {
+        // Arrange
+        let mut encoder = create_encoder();
+
+        // Act
+        let result = encoder.encode(&Bencode::List(vec![
+            Bencode::String(b"spam".to_vec()),
+            Bencode::String(b"eggs".to_vec()),
+        ]));
+
+        // Assert
+        assert!(result.is_ok());
+        assert_eq!(encoder.writer, b"l4:spam4:eggse");
+    }
+
+    #[test]
+    fn test_encode_empty_list() {
+        // Arrange
+        let mut encoder = create_encoder();
+
+        // Act
+        let result = encoder.encode(&Bencode::List(vec![]));
+
+        // Assert
+        assert!(result.is_ok());
+        assert_eq!(encoder.writer, b"le");
+    }
 }
